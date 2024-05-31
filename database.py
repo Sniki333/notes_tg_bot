@@ -4,14 +4,22 @@ import sqlite3
 
 class DB:
     def __init__(self):
-        if not os.path.exists('database.sqlite'):
-            f = open('database.sqlite', 'w')
+        self.db_name = 'database.sqlite'
+        self.create_database()
+        self.create_tables()
+
+    def create_database(self):
+        if not os.path.exists(self.db_name):
+            f = open(self.db_name, 'w')
             f.close()
 
-        self.con = sqlite3.connect('database.sqlite')
-        self.cur = self.con.cursor()
+    def get_connection(self):
+        return sqlite3.connect(self.db_name)
 
-        query = '''
+    def create_tables(self):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            query = '''
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
                 telegram_user_id INTEGER NOT NULL,
@@ -19,14 +27,18 @@ class DB:
                 join_date DATETIME NOT NULL DEFAULT ( (DATETIME('now') ) ) 
             );
         '''
-        self.cur.execute(query)
+            cursor.execute(query)
 
     def telegram_user_exists(self, user_id):
-        query = "SELECT * FROM users WHERE telegram_user_id = ?"
-        result = self.cur.execute(query, (user_id,))
-        return bool(len(result.fetchall()))
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            query = "SELECT * FROM users WHERE telegram_user_id = ?"
+            cursor.execute(query, (user_id,))
+            return cursor.fetchone() is not None
 
     def add_user(self, telegram_user_id, telegram_user_name):
-        query = "INSERT INTO users (telegram_user_id, telegram_user_name) VALUES (?, ?)"
-        self.cur.execute(query, (telegram_user_id, telegram_user_name))
-        self.con.commit()
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            query = "INSERT INTO users (telegram_user_id, telegram_user_name) VALUES (?, ?)"
+            cursor.execute(query, (telegram_user_id, telegram_user_name))
+            conn.commit()
