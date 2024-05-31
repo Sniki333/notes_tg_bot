@@ -1,8 +1,17 @@
-from bot import bot
+import os
+from bot import NotesBot
+from dotenv import load_dotenv
+from database import DB
+
+load_dotenv()
 
 
 def main():
-    bot.polling(none_stop=True, interval=0)
+    TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+    db = DB('database.sqlite')
+
+    notes_bot = NotesBot(TOKEN, db)
+    notes_bot.run()
 
 
 if __name__ == "__main__":
