@@ -1,4 +1,5 @@
 import telebot
+from telebot import types
 
 
 class NotesBot:
@@ -20,7 +21,11 @@ class NotesBot:
     def set_handlers(self):
         @self.bot.message_handler(commands=["start"])
         def start_command(message: telebot.types.Message):
-            # self.send_welcome(message)
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            btn1 = types.KeyboardButton("Information")
+            markup.add(btn1)
+            self.bot.send_message(message.from_user.id, "Нажмите кнопку 'Information' чтобы получить справку",
+                                  reply_markup=markup)
             if not self.db.telegram_user_exists(message.from_user.id):
                 self.db.add_user(message.from_user.id, message.from_user.username)
                 self.bot.send_message(message.from_user.id, "hello")
@@ -59,3 +64,24 @@ class NotesBot:
             user_id = message.from_user.id
             self.db.delete_note(user_id, note_id)
             self.bot.reply_to(message, "Заметка удалена!")
+
+        @self.bot.message_handler(content_types=["text"])
+        def func(message):
+            if message.text == "Information":
+                self.bot.send_message(message.chat.id, text="Этот бот создан для создания и хранения заметок.\n" +
+                                                            "/start - запуск\n" +
+                                                            "/add {text}\n" +
+                                                            "/notes - показать заметки\n" +
+                                                            "/delete {num} - удаление заметки")
+
+        @self.bot.message_handler(content_types=["photo"])
+        def func_photo_handler(message):
+            self.bot.send_message(message.chat.id, "красивое фото")
+
+        @self.bot.message_handler(content_types=["video"])
+        def func_photo_handler(message):
+            self.bot.send_message(message.chat.id, "классное видео")
+
+        @self.bot.message_handler(content_types=["sticker"])
+        def func_photo_handler(message):
+            self.bot.send_message(message.chat.id, "классный стикер")
